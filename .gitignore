@@ -1,0 +1,7 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+data/cache/
+generated_creatives/
+.pytest_cache/

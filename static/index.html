@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Vernacular Explainer Studio — Product Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @keyframes talk { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(0.6); } }
+  .talking { animation: talk 0.35s infinite; transform-origin: center; }
+  .src-highlight { background: #fde68a; transition: background 0.4s; }
+  .stage-dot { width: 14px; height: 14px; border-radius: 9999px; }
+  @keyframes kenburns { 0% { transform: scale(1) translate(0,0); } 100% { transform: scale(1.18) translate(-2%,-1%); } }
+  .kenburns { animation: kenburns 6s ease-in-out infinite alternate; }
+  @keyframes bob { 0%,50%,100% { transform: translateY(0); } 25%,75% { transform: translateY(-5px); } }
+  .avatar-bob { animation: bob 1.6s ease-in-out infinite; }
+  .scene-bar { transition: width 0.08s linear; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+<!-- NAV -->
+<header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+  <div class="flex items-center gap-2">
+    <span class="text-2xl"></span>
+    <span class="font-bold text-lg">Vernacular Explainer Studio</span>
+    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full ml-2">mockup</span>
+  </div>
+  <div class="text-sm text-slate-400">no backend attached — this is a clickable UI preview</div>
+</header>
+
+<main class="max-w-5xl mx-auto px-6 py-10">
+
+  <!-- ===================== VIEW 1: SUBMIT ===================== -->
+  <section id="view-submit">
+    <h1 class="text-2xl font-bold mb-1">Turn a dense document into an explainer anyone can watch</h1>
+    <p class="text-slate-500 mb-8">Paste a source, pick who it's for, and we'll do the rest.</p>
+
+    <div class="bg-white rounded-2xl shadow p-6 space-y-5">
+      <div>
+        <label class="text-sm font-semibold block mb-1">Source</label>
+        <textarea class="w-full border rounded-lg p-3 text-sm" rows="3"
+          placeholder="Paste a URL or article text… (e.g. a government crop insurance scheme notice)">https://example.gov/crop-insurance-scheme-2026</textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-semibold block mb-1">Target language</label>
+          <select id="lang-select" class="w-full border rounded-lg p-2 text-sm">
+            <option>English</option>
+            <option>Hindi</option>
+            <option>Kannada</option>
+            <option>Tamil</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-semibold block mb-1">Audience level</label>
+          <select id="audience-select" class="w-full border rounded-lg p-2 text-sm">
+            <option value="farmer">Farmer</option>
+            <option value="ca">CA student</option>
+            <option value="class8">Class 8 student</option>
+          </select>
+        </div>
+      </div>
+
+      <button onclick="startProcessing()"
+        class="bg-indigo-600 text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition">
+        Generate explainer →
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== VIEW 2: PROCESSING ===================== -->
+  <section id="view-processing" class="hidden">
+    <h1 class="text-2xl font-bold mb-6">Building your explainer…</h1>
+    <div class="bg-white rounded-2xl shadow p-6 space-y-4" id="stage-list"></div>
+    <button onclick="jumpToResult()" class="mt-6 text-sm text-indigo-600 underline">
+      Skip simulation → jump to result
+    </button>
+  </section>
+
+  <!-- ===================== VIEW 3: RESULT ===================== -->
+  <section id="view-result" class="hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-bold">Your explainer is ready</h1>
+      <button onclick="toggleCompare()" id="compare-btn"
+        class="text-sm font-semibold bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg">
+         Compare audience versions
+      </button>
+    </div>
+
+    <!-- stats strip -->
+    <div class="grid grid-cols-4 gap-3 mb-6 text-center">
+      <div class="bg-white rounded-xl shadow p-3"><div class="text-lg font-bold">₹2.10</div><div class="text-xs text-slate-500">est. cost</div></div>
+      <div class="bg-white rounded-xl shadow p-3"><div class="text-lg font-bold">48s</div><div class="text-xs text-slate-500">generation time</div></div>
+      <div class="bg-white rounded-xl shadow p-3"><div class="text-lg font-bold">English</div><div class="text-xs text-slate-500">language</div></div>
+      <div class="bg-white rounded-xl shadow p-3"><div class="text-lg font-bold" id="audience-label">Farmer</div><div class="text-xs text-slate-500">audience</div></div>
+    </div>
+
+    <!-- single view -->
+    <div id="single-result" class="grid grid-cols-2 gap-6">
+      <div>
+        <div class="bg-slate-900 rounded-2xl aspect-video relative overflow-hidden">
+          <div id="scene-bg" class="absolute inset-0 kenburns bg-gradient-to-br from-indigo-700 via-purple-700 to-slate-900"></div>
+          <div class="absolute inset-0 flex items-center justify-center px-8">
+            <p id="scene-onscreen" class="text-white text-lg font-semibold text-center drop-shadow">Press play to preview</p>
+          </div>
+          <div class="absolute bottom-10 left-4 avatar-bob">
+            <svg width="56" height="56" viewBox="0 0 60 60">
+              <circle cx="30" cy="30" r="26" fill="#fcd34d"/>
+              <circle cx="21" cy="24" r="3" fill="#1e293b"/>
+              <circle cx="39" cy="24" r="3" fill="#1e293b"/>
+              <rect id="avatar-mouth" x="20" y="36" width="20" height="6" rx="3" fill="#1e293b"/>
+            </svg>
+          </div>
+          <div class="absolute bottom-3 left-[72px] right-3 bg-black/40 rounded-full px-3 py-1 text-xs text-white" id="avatar-state-label">idle</div>
+          <div class="absolute bottom-0 left-0 h-1 bg-amber-400 scene-bar" id="scene-progress" style="width:0%"></div>
+        </div>
+        <div class="flex items-center justify-between mt-2">
+          <p class="text-xs text-slate-400">this is what the real Render step produces as an MP4</p>
+          <button onclick="playScenes(currentAudience)" class="text-xs font-semibold bg-indigo-600 text-white px-3 py-1 rounded-full">Replay</button>
+        </div>
+        <div id="caption-list" class="mt-3 space-y-2 text-sm"></div>
+      </div>
+
+      <div>
+        <h3 class="font-semibold text-sm mb-2"> Source document <span class="text-xs text-slate-400">(click a caption to jump here)</span></h3>
+        <div id="source-doc" class="bg-white rounded-xl shadow p-4 text-sm space-y-3 leading-relaxed"></div>
+      </div>
+    </div>
+
+    <!-- compare view -->
+    <div id="compare-result" class="hidden grid grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="font-bold mb-2"> Explained to: Farmer</h3>
+        <div id="compare-farmer" class="text-sm space-y-2"></div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4">
+        <h3 class="font-bold mb-2"> Explained to: CA student</h3>
+        <div id="compare-ca" class="text-sm space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- quiz -->
+    <div class="bg-white rounded-2xl shadow p-6 mt-8">
+      <h3 class="font-bold mb-3"> Quick comprehension check</h3>
+      <div id="quiz-box" class="space-y-4 text-sm"></div>
+      <button onclick="scoreQuiz()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Submit</button>
+      <p id="quiz-result" class="mt-3 text-sm font-semibold"></p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ---------- mock data ----------
+const SOURCE = [
+  "The 2026 Crop Insurance Scheme covers losses from drought, flood, and pest attacks for registered farmers.",
+  "Farmers pay a fixed premium of 2% of the sum insured for food crops; the government subsidizes the remaining premium.",
+  "Claims must be filed within 72 hours of crop damage through the local agriculture office or the mobile app.",
+];
+
+const SCENES = {
+  farmer: [
+    { narration: "If your crop fails because of drought, flood, or pests, this government scheme pays you back.", spanIdx: 0 },
+    { narration: "You only pay a small amount — just 2 rupees for every 100 rupees of cover. The government pays the rest.", spanIdx: 1 },
+    { narration: "If your crop is damaged, tell your local agriculture office within 3 days, or use the app.", spanIdx: 2 },
+  ],
+  ca: [
+    { narration: "The 2026 scheme provides indemnity cover against drought, flood, and pest-related crop loss for enrolled cultivators.", spanIdx: 0 },
+    { narration: "Premium is capped at 2% of sum insured for food crops — the balance is a government subsidy, effectively a co-pay model.", spanIdx: 1 },
+    { narration: "Claim intimation has a strict 72-hour SLA, filed via the local office or the mobile app — a compliance detail worth flagging to clients.", spanIdx: 2 },
+  ],
+};
+
+const QUIZ = [
+  { q: "What does the scheme cover?", options: ["Only drought", "Drought, flood, and pest damage", "Only flood"], answer: 1 },
+  { q: "How much premium does a farmer pay for food crops?", options: ["2%", "50%", "100%"], answer: 0 },
+  { q: "How soon must a claim be filed after damage?", options: ["72 hours", "30 days", "No deadline"], answer: 0 },
+];
+
+const STAGES = ["Ingest", "Script (Gemini, verify)", "Voice (TTS)", "Visuals (Imagen)", "Quiz (Gemini)", "Render"];
+
+// ---------- view switching ----------
+function show(id) {
+  ["view-submit", "view-processing", "view-result"].forEach(v =>
+    document.getElementById(v).classList.toggle("hidden", v !== id));
+}
+
+function startProcessing() {
+  show("view-processing");
+  const list = document.getElementById("stage-list");
+  list.innerHTML = STAGES.map((s, i) => `
+    <div class="flex items-center gap-3" id="stage-${i}">
+      <div class="stage-dot bg-slate-300" id="dot-${i}"></div>
+      <span class="text-sm">${s}</span>
+    </div>`).join("");
+
+  let i = 0;
+  const tick = () => {
+    if (i > 0) document.getElementById(`dot-${i-1}`).className = "stage-dot bg-emerald-500";
+    if (i < STAGES.length) {
+      document.getElementById(`dot-${i}`).className = "stage-dot bg-amber-400 animate-pulse";
+      i++;
+      setTimeout(tick, 600);
+    } else {
+      setTimeout(jumpToResult, 500);
+    }
+  };
+  tick();
+}
+
+function jumpToResult() {
+  show("view-result");
+  renderSingle("farmer");
+  renderCompare();
+  renderQuiz();
+}
+
+// ---------- result rendering ----------
+function renderSourceDoc(highlightIdx) {
+  document.getElementById("source-doc").innerHTML = SOURCE.map((p, i) =>
+    `<p id="src-${i}" class="${i === highlightIdx ? 'src-highlight p-1 rounded' : ''}">${p}</p>`).join("");
+}
+
+function renderSingle(audience) {
+  currentAudience = audience;
+  document.getElementById("audience-label").textContent = audience === "farmer" ? "Farmer" : "CA student";
+  const scenes = SCENES[audience];
+  renderSourceDoc(null);
+  document.getElementById("caption-list").innerHTML = scenes.map((sc, i) =>
+    `<div id="cap-${i}" onclick="jumpToSpan(${sc.spanIdx})" class="cursor-pointer border rounded-lg p-2 hover:bg-indigo-50">
+      <span class="text-indigo-600 font-mono text-xs">scene ${i+1}</span> — ${sc.narration}
+    </div>`).join("");
+  playScenes(audience);
+}
+
+// ---------- scene "video" playback (stand-in for the real rendered MP4) ----------
+let currentAudience = "farmer";
+let playTimer = null;
+let mouthTimer = null;
+const SCENE_MS = 3200;
+const BG_THEMES = [
+  "from-indigo-700 via-purple-700 to-slate-900",
+  "from-emerald-700 via-teal-700 to-slate-900",
+  "from-rose-700 via-orange-700 to-slate-900",
+];
+
+function playScenes(audience) {
+  clearTimeout(playTimer);
+  clearInterval(mouthTimer);
+  const scenes = SCENES[audience];
+  let i = 0;
+
+  mouthTimer = setInterval(() => {
+    const m = document.getElementById("avatar-mouth");
+    if (m) m.classList.toggle("talking");
+  }, 220);
+
+  const playNext = () => {
+    if (i >= scenes.length) {
+      document.getElementById("avatar-state-label").textContent = "done";
+      clearInterval(mouthTimer);
+      return;
+    }
+    const sc = scenes[i];
+    document.getElementById("scene-onscreen").textContent = sc.narration;
+    document.getElementById("scene-bg").className =
+      "absolute inset-0 kenburns bg-gradient-to-br " + BG_THEMES[i % BG_THEMES.length];
+    document.getElementById("avatar-state-label").textContent = i === 1 ? "pointing" : "talking";
+    highlightCaption(i);
+    jumpToSpan(sc.spanIdx);
+    animateProgress(SCENE_MS);
+    i++;
+    playTimer = setTimeout(playNext, SCENE_MS);
+  };
+  playNext();
+}
+
+function animateProgress(duration) {
+  const bar = document.getElementById("scene-progress");
+  bar.style.width = "0%";
+  let start = null;
+  function step(ts) {
+    if (!start) start = ts;
+    const pct = Math.min(100, ((ts - start) / duration) * 100);
+    bar.style.width = pct + "%";
+    if (pct < 100) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function highlightCaption(idx) {
+  document.querySelectorAll('[id^="cap-"]').forEach((el, i) => {
+    el.classList.toggle("bg-indigo-100", i === idx);
+  });
+}
+
+function jumpToSpan(idx) {
+  renderSourceDoc(idx);
+  document.getElementById("src-" + idx).scrollIntoView({behavior: "smooth", block: "center"});
+}
+
+function toggleCompare() {
+  const single = document.getElementById("single-result");
+  const compare = document.getElementById("compare-result");
+  const showingCompare = compare.classList.contains("hidden");
+  single.classList.toggle("hidden", showingCompare);
+  compare.classList.toggle("hidden", !showingCompare);
+  if (showingCompare) {
+    document.getElementById("compare-farmer").innerHTML = SCENES.farmer.map(s => `<p>• ${s.narration}</p>`).join("");
+    document.getElementById("compare-ca").innerHTML = SCENES.ca.map(s => `<p>• ${s.narration}</p>`).join("");
+  }
+}
+
+// ---------- quiz ----------
+function renderQuiz() {
+  document.getElementById("quiz-box").innerHTML = QUIZ.map((item, qi) => `
+    <div>
+      <p class="font-medium mb-1">${qi+1}. ${item.q}</p>
+      ${item.options.map((opt, oi) => `
+        <label class="flex items-center gap-2 pl-2">
+          <input type="radio" name="q${qi}" value="${oi}"> ${opt}
+        </label>`).join("")}
+    </div>`).join("");
+  document.getElementById("quiz-result").textContent = "";
+}
+
+function scoreQuiz() {
+  let score = 0;
+  QUIZ.forEach((item, qi) => {
+    const picked = document.querySelector(`input[name="q${qi}"]:checked`);
+    if (picked && parseInt(picked.value) === item.answer) score++;
+  });
+  document.getElementById("quiz-result").textContent =
+    `You scored ${score}/${QUIZ.length}. Readers who only read the source article averaged 1.6/3 in our pilot test.`;
+}
+</script>
+</body>
+</html>
